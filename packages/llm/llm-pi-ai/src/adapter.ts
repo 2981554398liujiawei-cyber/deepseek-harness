@@ -76,6 +76,11 @@ export interface PiAiAdapterOptions {
   resolveApiKey: (provider: string, profile: ResolvedPiAiProviderProfile) => Promise<string | undefined>
   /** Resolve the optional durable attachment service at request time. */
   resolveAttachments?: () => AttachmentStore | undefined
+  /**
+   * Observe one assistant history message degrading to provider-neutral
+   * conversion because its stored replay state is unusable by this build.
+   */
+  onReplayDegrade?: (detail: { provider: string; model: string; reason: string }) => void
 }
 
 /** Copy profile stream knobs into pi-ai's common option vocabulary. */
@@ -304,15 +309,21 @@ export class PiAiAdapter extends LlmAdapter {
       // the image is degraded to a durable text reference the agent can
       // resolve through a vision tool, instead of the request being refused.
       const degradeImages = containsImage && profile.degradeImages === true
+      if (containsImage && !degradeImages && !model.input.includes('image')) {
+        throw new LlmError(`pi-ai model "${model.id}" does not support image input`, 'UNSUPPORTED_CONTENT')
+      }
       const attachments = containsImage && !degradeImages ? this.config.resolveAttachments?.() : undefined
       if (containsImage && !degradeImages && attachments === undefined) {
         throw new LlmError('pi-ai image input requires the durable attachment service', 'UNSUPPORTED_CONTENT')
       }
+      const onReplayDegrade = (reason: string): void => {
+        this.config.onReplayDegrade?.({ provider: options.provider, model: options.model, reason })
+      }
       const context = degradeImages
-        ? await toPiContext(options, undefined, true)
+        ? await toPiContext(options, undefined, true, onReplayDegrade)
         : attachments === undefined
-          ? toPiContext(options)
-          : await toPiContext(options, attachments, false)
+          ? toPiContext(options, undefined, onReplayDegrade)
+          : await toPiContext(options, attachments, onReplayDegrade)
       const events = snapshot.models.streamSimple(model, context, {
         ...profileOptions(profile, reasoning, apiKey),
         ...options.temperature === undefined ? {} : { temperature: options.temperature },

@@ -103,7 +103,7 @@ function piContext(options: GenerateOptions, messages: PiMessage[]): PiContext {
   }
 }
 
-function textOnlyContext(options: GenerateOptions): PiContext {
+function textOnlyContext(options: GenerateOptions, onReplayDegrade?: (reason: string) => void): PiContext {
   const toolNames = new Map<CallId, string>()
   const messages: PiMessage[] = []
   for (const message of options.messages) {
@@ -115,7 +115,7 @@ function textOnlyContext(options: GenerateOptions): PiContext {
       continue
     }
     if (message.role === 'assistant') {
-      const assistant = toPiAssistant(message)
+      const assistant = toPiAssistant(message, onReplayDegrade)
       for (const block of assistant.content) if (block.type === 'toolCall') toolNames.set(CallId(block.id), block.name)
       messages.push(assistant)
       continue
@@ -144,31 +144,53 @@ function textOnlyContext(options: GenerateOptions): PiContext {
  * Convert text-only harness history to a synchronous pi-ai Context. Tool
  * result names are recovered from preceding assistant tool calls.
  * @param options - the harness request; `options.system` maps to pi-ai's single `systemPrompt` slot.
+ * @param attachments - absent; selects the synchronous conversion.
+ * @param onReplayDegrade - forwarded to {@link toPiAssistant} for each assistant message.
  * @returns the pi-ai context; `tools` is omitted when the request declares none.
  */
-export function toPiContext(options: GenerateOptions): PiContext
+export function toPiContext(
+  options: GenerateOptions,
+  attachments?: undefined,
+  onReplayDegrade?: (reason: string) => void,
+): PiContext
 /**
  * Convert harness history to a pi-ai Context while resolving durable images.
  * Tool result names are recovered from preceding assistant tool calls.
  * @param options - the harness request; `options.system` maps to pi-ai's single `systemPrompt` slot.
  * @param attachments - durable byte resolver for image references.
- * @param degradeImages - replace images with durable text references instead of
- *   base64 content, for a model that cannot see images.
+ * @param degradeImages - replace images with durable text references instead of base64 content.
+ * @param onReplayDegrade - forwarded to {@link toPiAssistant} for each assistant message.
  * @returns the asynchronously resolved pi-ai context.
  */
-export function toPiContext(options: GenerateOptions, attachments: AttachmentStore | undefined, degradeImages?: boolean): Promise<PiContext>
+export function toPiContext(
+  options: GenerateOptions,
+  attachments: undefined,
+  degradeImages: boolean,
+  onReplayDegrade?: (reason: string) => void,
+): Promise<PiContext>
+export function toPiContext(
+  options: GenerateOptions,
+  attachments: AttachmentStore,
+  onReplayDegrade?: (reason: string) => void,
+): Promise<PiContext>
 export function toPiContext(
   options: GenerateOptions,
   attachments?: AttachmentStore,
-  degradeImages?: boolean,
+  degradeImagesOrReplay?: boolean | ((reason: string) => void),
+  onReplayDegrade?: (reason: string) => void,
 ): PiContext | Promise<PiContext> {
-  return attachments === undefined && !degradeImages ? textOnlyContext(options) : toPiContextWithImages(options, attachments, degradeImages)
+  const degradeImages = typeof degradeImagesOrReplay === 'boolean' ? degradeImagesOrReplay : false
+  const replayDegrade = typeof degradeImagesOrReplay === 'function' ? degradeImagesOrReplay : onReplayDegrade
+  return attachments === undefined && !degradeImages
+    ? textOnlyContext(options, replayDegrade)
+    : toPiContextWithImages(options, attachments, degradeImages, replayDegrade)
 }
 
 async function toPiContextWithImages(
   options: GenerateOptions,
   attachments: AttachmentStore | undefined,
   degradeImages = false,
+  onReplayDegrade?: (reason: string) => void,
 ): Promise<PiContext> {
   const toolNames = new Map<CallId, string>()
   const messages: PiMessage[] = []
@@ -185,7 +207,7 @@ async function toPiContextWithImages(
       continue
     }
     if (message.role === 'assistant') {
-      const assistant = toPiAssistant(message)
+      const assistant = toPiAssistant(message, onReplayDegrade)
       for (const block of assistant.content) {
         if (block.type === 'toolCall') toolNames.set(CallId(block.id), block.name)
       }
