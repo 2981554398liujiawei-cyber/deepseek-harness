@@ -300,16 +300,19 @@ export class PiAiAdapter extends LlmAdapter {
 
     try {
       const containsImage = options.messages.some(message => contentHasImage(message.content))
-      if (containsImage && !model.input.includes('image')) {
-        throw new LlmError(`pi-ai model "${model.id}" does not support image input`, 'UNSUPPORTED_CONTENT')
-      }
-      const attachments = containsImage ? this.config.resolveAttachments?.() : undefined
-      if (containsImage && attachments === undefined) {
+      // A route whose endpoint cannot serve images still admits the message:
+      // the image is degraded to a durable text reference the agent can
+      // resolve through a vision tool, instead of the request being refused.
+      const degradeImages = containsImage && profile.degradeImages === true
+      const attachments = containsImage && !degradeImages ? this.config.resolveAttachments?.() : undefined
+      if (containsImage && !degradeImages && attachments === undefined) {
         throw new LlmError('pi-ai image input requires the durable attachment service', 'UNSUPPORTED_CONTENT')
       }
-      const context = attachments === undefined
-        ? toPiContext(options)
-        : await toPiContext(options, attachments)
+      const context = degradeImages
+        ? await toPiContext(options, undefined, true)
+        : attachments === undefined
+          ? toPiContext(options)
+          : await toPiContext(options, attachments, false)
       const events = snapshot.models.streamSimple(model, context, {
         ...profileOptions(profile, reasoning, apiKey),
         ...options.temperature === undefined ? {} : { temperature: options.temperature },

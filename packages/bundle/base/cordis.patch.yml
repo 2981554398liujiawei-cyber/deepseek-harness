@@ -66,6 +66,16 @@
         provider: deepseek-official
         model: deepseek-v4-flash
 
+    # Prompt enhancement host service: route pinned to the RightAPI relay
+    # (gpt-5.6-luna), independent of the agent default model. The browser UI
+    # consumes it through the promptEnhancer Remote; headless surfaces simply
+    # carry it. Key/endpoint come from the `llm-rightapi:` settings section.
+    - id: prompt-enhancer
+      name: '@deepseek-ai/dsh-prompt-enhancer'
+      config:
+        provider: rightapi
+        model: gpt-5.6-luna
+
     - id: jobs
       name: '@deepseek-ai/dsh-jobs-local'
 
@@ -449,3 +459,10 @@
     # choice.
     - id: llm-deepseek
       name: '@deepseek-ai/dsh-llm-deepseek'
+
+    # The RightAPI (OpenAI-compatible relay) adapter, mounted dormant like
+    # pi-ai: zero routes until a `llm-rightapi:` settings section supplies an
+    # endpoint/key. The prompt-enhancer service above points at it, so boosting
+    # prompts can use a different model (e.g. gpt-5.6-luna) from the agent's.
+    - id: llm-rightapi
+      name: '@deepseek-ai/dsh-llm-rightapi'

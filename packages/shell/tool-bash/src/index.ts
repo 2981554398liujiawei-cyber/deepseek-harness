@@ -20,7 +20,7 @@ import type {} from '@deepseek-ai/dsh-jobs'
 import type {} from '@deepseek-ai/dsh-user-approval'
 import type {} from '@deepseek-ai/dsh-shell-env'
 import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import { ESCALATION_TARGETS, approveEscalation, canonicalPath, validateEscalationArgs } from '@deepseek-ai/dsh-sandbox'
+import { ESCALATION_TARGETS, approveEscalation, canonicalPath, normalizeEscalationRequest, validateEscalationArgs } from '@deepseek-ai/dsh-sandbox'
 import type { SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy'
 import { DSH_ENV_PREFIX } from '@deepseek-ai/dsh-shell'
 import type { ShellRunResult } from '@deepseek-ai/dsh-shell'
@@ -63,8 +63,8 @@ function validateBashArgs(args: BashToolArgs): void {
     throw new Error(`invalid timeoutMs: expected a positive number, got ${JSON.stringify(args.timeoutMs)}`)
   }
   // The escalation pairing (sandbox_permissions ⇔ justification, non-empty) is
-  // the shared rule both enforcing families validate identically.
-  validateEscalationArgs(args.sandbox_permissions, args.justification)
+  // validated AFTER normalization against the call's effective mode in execute:
+  // a request that is not strictly wider degrades to no request first.
 }
 
 function bashDescription(backgroundEnabled: boolean, escalationModes: readonly SandboxMode[]): string {
@@ -331,8 +331,14 @@ export function apply(ctx: Context, config: Config = {}): void {
       validateBashArgs(args)
       // Description is display metadata; workdir defaults to the caller's session.
       const standingPolicy = resolveSandboxPolicy(exec)
-      const approvedMode = args.sandbox_permissions !== undefined && args.justification !== undefined
-        ? await approveBashEscalation(args.sandbox_permissions, args.justification, exec, standingPolicy)
+      // A model-supplied escalation that is not strictly wider than the call's
+      // effective mode (e.g. `workspace-write` on a danger-full-access session)
+      // degrades to no request here — the call runs under the standing policy,
+      // exactly as if the model had not sent the field at all.
+      const escalation = normalizeEscalationRequest(args.sandbox_permissions, args.justification, standingPolicy?.mode)
+      validateEscalationArgs(escalation.sandbox_permissions, escalation.justification)
+      const approvedMode = escalation.sandbox_permissions !== undefined && escalation.justification !== undefined
+        ? await approveBashEscalation(escalation.sandbox_permissions, escalation.justification, exec, standingPolicy)
         : undefined
       const policy = approvedMode === undefined
         ? standingPolicy

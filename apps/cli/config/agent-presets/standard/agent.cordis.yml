@@ -27,6 +27,8 @@
     text: >-
       You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.
 
+      你的思考过程（reasoning，即回复正文之前的推理内容）必须始终使用简体中文书写，包括全部的分析、推理、规划与内部思考。回复正文使用与用户消息相同的语言。
+
 - id: agent-instructions
   name: '@deepseek-ai/dsh-agent-instructions'
   config:
@@ -249,3 +251,21 @@
   config:
     fetch: false
     searchTimeoutMs: 60000
+
+# ── web ChatGPT consultation ────────────────────────────────────────────────
+
+# Ask the web-signed-in ChatGPT and read its reply. No realm: it only registers
+# into the host `tools` registry and provides nothing, like tool-fs above.
+# Execution shells out to the user-level gpt_web.py bridge under
+# $DSH_HOME/gpt-web (Playwright + persisted sign-in session).
+- id: tool-gpt-web
+  name: '@deepseek-ai/dsh-tool-gpt-web'
+
+# ── image identification through a vision model ────────────────────────────
+
+# vision_identify: read a [图片附件: attachmentId=sha256:...] reference from a
+# user message, load the attachment bytes, and describe the picture through a
+# vision-capable model (Zhipu GLM-4V by default). No realm: it only registers
+# into the host `tools` registry and the `vision-zhipu` settings namespace.
+- id: tool-vision-zhipu
+  name: '@deepseek-ai/dsh-tool-vision-zhipu'

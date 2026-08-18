@@ -1,0 +1,62 @@
+[
+  {
+    "name": "page loads",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "composer textarea visible",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "boost button visible",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "empty input shows error panel",
+    "pass": true,
+    "detail": "增强失败\n输入为空：请先在输入框里写点什么。"
+  },
+  {
+    "name": "draft typed",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "loading state during enhance",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "result panel appears",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "panel has write action",
+    "pass": true,
+    "detail": "增强结果 结构化分析不可用，已生成增强文本。 评分 45 任务类型：写作 请以项目负责人的口吻，为客户写一封关于项目延期两周的邮件：先诚恳致歉并简要说明延期原因，再明确写出新的交付时间（留出具体日期占位），补充已采取的补"
+  },
+  {
+    "name": "enhanced text written back",
+    "pass": true,
+    "detail": "len=108"
+  },
+  {
+    "name": "undo affordance appears after write",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "undo restores original draft",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "name": "clarification entry renders when model asks",
+    "pass": true,
+    "detail": ""
+  }
+]

@@ -51,6 +51,8 @@ import * as ToolStrReplaceEditor from '@deepseek-ai/dsh-tool-str-replace-editor'
 import TerminalSessionService from '@deepseek-ai/dsh-terminal'
 import * as ToolPty from '@deepseek-ai/dsh-tool-terminal'
 import * as ToolGoal from '@deepseek-ai/dsh-tool-goal'
+import * as ToolGptWeb from '@deepseek-ai/dsh-tool-gpt-web'
+import * as ToolVisionZhipu from '@deepseek-ai/dsh-tool-vision-zhipu'
 import * as ToolSchedule from '@deepseek-ai/dsh-schedule'
 import Lsp from '@deepseek-ai/dsh-lsp'
 import * as ToolLsp from '@deepseek-ai/dsh-tool-lsp'
@@ -354,6 +356,30 @@ const TOOL_PACKAGES: ToolPackage[] = [
     },
     note:
       'create, edit, pause, and resume require direct-human root authority; complete and blocked also accept the exact current goal round. The default blocked lower bound is three admitted rounds.',
+  },
+  {
+    pkg: '@deepseek-ai/dsh-tool-gpt-web',
+    dir: 'tool-gpt-web',
+    source: 'packages/ai/tool-gpt-web/src/index.ts',
+    requires: ['ctx.tools', 'user-level gpt_web.py runtime + signed-in session profile under $DSH_HOME/gpt-web (execution time)'],
+    writes: ['tool/call', 'tool/result'],
+    async mount(ctx) {
+      await ctx.plugin(ToolGptWeb)
+    },
+    note:
+      'gpt_web_ask shells out to the user-level Playwright bridge and returns the signed-in ChatGPT reply; the browser window and anti-automation risk belong to OpenAI\'s web surface, so keep call frequency low.',
+  },
+  {
+    pkg: '@deepseek-ai/dsh-tool-vision-zhipu',
+    dir: 'tool-vision-zhipu',
+    source: 'packages/ai/tool-vision-zhipu/src/index.ts',
+    requires: ['ctx.tools', 'ctx.settings', 'ctx.systemPrompt', 'the durable attachment store under $DSH_HOME/attachments (execution time)', 'a Zhipu vision API key'],
+    writes: ['tool/call', 'tool/result'],
+    async mount(ctx) {
+      await ctx.plugin(ToolVisionZhipu)
+    },
+    note:
+      'vision_identify reads the image attachment referenced by [图片附件: attachmentId=sha256:...] in a user message and describes it through a vision-capable model (Zhipu GLM-4V by default), covering the degrade path of llm-pi-ai for text-only agent models.',
   },
   {
     pkg: '@deepseek-ai/dsh-schedule',

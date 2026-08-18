@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-08-15T07:20:02.378Z",
+  "results": [
+    {
+      "name": "page + button ready",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "result panel appears",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "panel fully inside viewport",
+      "pass": true,
+      "detail": "y=191 h=302 (vh=900)"
+    },
+    {
+      "name": "enhanced text preview visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "panel shows enhanced text content",
+      "pass": true,
+      "detail": "len=496"
+    },
+    {
+      "name": "write button visible in viewport",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "enhanced text written back",
+      "pass": true,
+      "detail": "len=468"
+    }
+  ]
+}

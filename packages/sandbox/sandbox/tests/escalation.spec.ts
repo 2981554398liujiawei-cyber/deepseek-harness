@@ -12,6 +12,7 @@ import {
   WIDER_MODES,
   approveEscalation,
   escalationHintMarker,
+  normalizeEscalationRequest,
   sandboxDenialMarker,
   validateEscalationArgs,
 } from '@deepseek-ai/dsh-sandbox'
@@ -51,6 +52,48 @@ describe('the model-facing markers', () => {
   it('the hint marker names the family subject', () => {
     expect(escalationHintMarker('command')).toContain('retry this exact command once with sandbox_permissions')
     expect(escalationHintMarker('operation')).toContain('retry this exact operation once with sandbox_permissions')
+  })
+})
+
+describe('normalizeEscalationRequest', () => {
+  it('passes a genuine strictly-wider escalation through unchanged', () => {
+    expect(normalizeEscalationRequest('workspace-write', 'the command needs the workspace', 'read-only'))
+      .toEqual({ sandbox_permissions: 'workspace-write', justification: 'the command needs the workspace' })
+    expect(normalizeEscalationRequest('danger-full-access', 'a system path is required', 'read-only'))
+      .toEqual({ sandbox_permissions: 'danger-full-access', justification: 'a system path is required' })
+  })
+
+  it('degrades a request that is not strictly wider to NO request, dropping the justification too', () => {
+    // The exact redundant case: a fully-permissive session and the model repeats
+    // a standing or lower target. The call must proceed as if no escalation was
+    // sent — no approval prompt, no "not strictly wider" failure.
+    expect(normalizeEscalationRequest('workspace-write', 'redundant on a permissive session', 'danger-full-access')).toEqual({})
+    expect(normalizeEscalationRequest('danger-full-access', 'redundant too', 'danger-full-access')).toEqual({})
+    // Equal to the standing mode is also not wider, and needs no justification
+    // either — an incomplete redundant request must not fail validation later.
+    expect(normalizeEscalationRequest('workspace-write', undefined, 'workspace-write')).toEqual({})
+    expect(normalizeEscalationRequest('read-only', 'the floor is never an escalation', 'read-only')).toEqual({})
+  })
+
+  it("keeps a genuine escalation's missing-justification intact for pairing validation to reject", () => {
+    // A truly wider request without a reason is a malformed ask, not a
+    // redundant one — it must survive normalization so validateEscalationArgs
+    // can demand the justification.
+    expect(normalizeEscalationRequest('workspace-write', undefined, 'read-only'))
+      .toEqual({ sandbox_permissions: 'workspace-write' })
+  })
+
+  it('passes everything through when there is no effective mode (no confining backend)', () => {
+    expect(normalizeEscalationRequest('workspace-write', 'why not', undefined))
+      .toEqual({ sandbox_permissions: 'workspace-write', justification: 'why not' })
+    expect(normalizeEscalationRequest(undefined, undefined, undefined)).toEqual({})
+  })
+
+  it('passes an unrecognized effective mode through for the fail-closed sequence to rule on', () => {
+    // A malformed session mode is a defensive edge, not a redundant request:
+    // normalization must not swallow it — approveEscalation still decides.
+    expect(normalizeEscalationRequest('workspace-write', 'defensive', 'unknown-mode' as never))
+      .toEqual({ sandbox_permissions: 'workspace-write', justification: 'defensive' })
   })
 })
 

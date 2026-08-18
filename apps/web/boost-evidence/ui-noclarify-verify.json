@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-08-15T07:05:07.426Z",
+  "results": [
+    {
+      "name": "page loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "composer textarea visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "boost button visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "draft typed",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "loading state during enhance",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "result panel appears",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "panel has score/task/enhanced text",
+      "pass": true,
+      "detail": "增强结果 评分 18 任务类型：商业 你是一名资深产品营销专家。请为【产品名称】撰写一份面向【目标受众】的推广方案，包含市场简析、人群画像、核心卖点、渠道策略、创意活动、预算排期、"
+    },
+    {
+      "name": "panel has NO clarification affordances",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "enhanced text written back",
+      "pass": true,
+      "detail": "len=104"
+    },
+    {
+      "name": "undo restores original draft",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

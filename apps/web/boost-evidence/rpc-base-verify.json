@@ -1,0 +1,69 @@
+﻿{
+    "type":  "server-response",
+    "rpcId":  "verify-base-4",
+    "result":  {
+                   "ok":  true,
+                   "value":  {
+                                 "enhancedText":  "作为专业商务沟通顾问，请帮我起草一封项目延期道歉邮件给客户。要点：\n1. 开头诚恳道歉，不找借口；\n2. 简述延期原因（用【延期原因】替代）；\n3. 说明补救措施（如加急、补偿等）；\n4. 给出新交付时间（【新交付时间】）；\n5. 结尾再次致歉，表达重视。\n要求：语气诚恳专业，200-400字，含正式主题行、称呼、落款。收件人：【客户名称】，发件人：【您的姓名】。请直接输出邮件正文。",
+                                 "analysis":  {
+                                                  "detectedTaskType":  "writing",
+                                                  "confidence":  0.95,
+                                                  "scoreDimensions":  {
+                                                                          "objective":  80,
+                                                                          "context":  20,
+                                                                          "audience":  30,
+                                                                          "outputFormat":  20,
+                                                                          "constraints":  10,
+                                                                          "role":  10,
+                                                                          "materials":  10,
+                                                                          "actionability":  50
+                                                                      },
+                                                  "totalScore":  33,
+                                                  "scoreSource":  "llm",
+                                                  "missingInformation":  [
+                                                                             "延期原因",
+                                                                             "新交付时间",
+                                                                             "客户关系/语气偏好"
+                                                                         ],
+                                                  "criticalMissingInformation":  [
+                                                                                     "延期原因",
+                                                                                     "新交付时间"
+                                                                                 ],
+                                                  "suggestions":  [
+                                                                      "补充延期原因和新时间，让邮件更具体可信",
+                                                                      "明确补救措施，展示积极解决问题的态度",
+                                                                      "根据客户关系调整语气：重要客户更正式，长期客户可稍口语化"
+                                                                  ],
+                                                  "clarificationRequired":  true,
+                                                  "clarificationQuestions":  [
+                                                                                 {
+                                                                                     "id":  "q1",
+                                                                                     "question":  "项目延期的具体原因是什么？",
+                                                                                     "reason":  "原因决定措辞和解释方式",
+                                                                                     "required":  true
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "q2",
+                                                                                     "question":  "新的交付时间是什么时候？",
+                                                                                     "reason":  "邮件必须给出明确时间承诺",
+                                                                                     "required":  true
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "q3",
+                                                                                     "question":  "客户的重要程度或关系如何？希望语气正式还是亲切？",
+                                                                                     "reason":  "影响语气和沟通尺度",
+                                                                                     "required":  false
+                                                                                 }
+                                                                             ]
+                                              },
+                                 "assumptions":  [
+                                                     "邮件需要正式商务格式（主题行、称呼、落款）",
+                                                     "道歉语气需诚恳专业，避免推卸责任",
+                                                     "客户名称和发件人信息可通过占位符替换"
+                                                 ],
+                                 "provider":  "packy",
+                                 "model":  "deepseek-v4-flash",
+                                 "fallback":  null
+                             }
+               }
+}

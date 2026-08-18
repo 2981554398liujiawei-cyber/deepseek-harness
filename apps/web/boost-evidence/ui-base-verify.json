@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-08-15T02:20:40.711Z",
+  "results": [
+    {
+      "name": "page loads",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "composer textarea visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "boost button visible beside send",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "draft typed",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "loading state during enhance",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "result panel appears",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "panel shows score/task/enhanced text",
+      "pass": true,
+      "detail": "增强结果 补充以下信息可让增强更贴合你的需求： 回答并增强 跳过追问 评分 32 任务类型：写作 请以专业客户关系经理的身份，帮我写一封项目延期的道歉邮件给客户。写作前，请先向我确"
+    },
+    {
+      "name": "enhanced text written back",
+      "pass": true,
+      "detail": "len=224"
+    },
+    {
+      "name": "undo affordance appears after write",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "undo restores original draft",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

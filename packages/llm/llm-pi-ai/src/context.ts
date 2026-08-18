@@ -28,7 +28,8 @@ function toolResultText(blocks: readonly ContentBlock[]): string {
 
 async function userContent(
   blocks: readonly ContentBlock[],
-  attachments: AttachmentStore,
+  attachments: AttachmentStore | undefined,
+  degradeImages = false,
 ): Promise<string | (TextContent | ImageContent)[]> {
   const content: (TextContent | ImageContent)[] = []
   for (const block of blocks) {
@@ -36,18 +37,36 @@ async function userContent(
       case 'text':
         if (block.text.length > 0) content.push({ type: 'text', text: block.text })
         break
-      case 'image': {
-        const stored = await attachments.readImage(block.attachment)
-        content.push({
-          type: 'image',
-          data: Buffer.from(stored.data).toString('base64'),
-          mimeType: stored.ref.mediaType,
-        })
+      case 'image':
+        if (degradeImages) {
+          // The active model cannot see images: hand the request only a
+          // durable reference so the agent can resolve the pixels through a
+          // vision tool instead of the provider rejecting the request.
+          const ref = block.attachment
+          const [, hash = ''] = ref.attachmentId.split(':')
+          content.push({
+            type: 'text',
+            text: `[图片附件: attachmentId=${ref.attachmentId}, mediaType=${ref.mediaType}, ${ref.width}x${ref.height}。` +
+              `读取：附件字节位于 DSH_HOME/attachments/v1/objects/${hash.slice(0, 2)}/${hash}，用 pwsh 读取即可获得图片数据；` +
+              '如需识别图片内容，调用智谱视觉模型 glm-4v-flash（base https://open.bigmodel.cn/api/paas/v4，API key 见 DSH_HOME/.credentials.yaml 的 ZHIPU_API_KEY，OpenAI 兼容接口，将图片 base64 作为 image_url 传入）]',
+          })
+          break
+        }
+        {
+          if (attachments === undefined) {
+            throw new LlmError('pi-ai image conversion requires the durable attachment service', 'UNSUPPORTED_CONTENT')
+          }
+          const stored = await attachments.readImage(block.attachment)
+          content.push({
+            type: 'image',
+            data: Buffer.from(stored.data).toString('base64'),
+            mimeType: stored.ref.mediaType,
+          })
+        }
         break
-      }
       case 'tool-result':
         {
-          const nested = await userContent(block.content, attachments)
+          const nested = await userContent(block.content, attachments, degradeImages)
           if (typeof nested === 'string') {
             if (nested.length > 0) content.push({ type: 'text', text: nested })
           } else {
@@ -133,20 +152,30 @@ export function toPiContext(options: GenerateOptions): PiContext
  * Tool result names are recovered from preceding assistant tool calls.
  * @param options - the harness request; `options.system` maps to pi-ai's single `systemPrompt` slot.
  * @param attachments - durable byte resolver for image references.
+ * @param degradeImages - replace images with durable text references instead of
+ *   base64 content, for a model that cannot see images.
  * @returns the asynchronously resolved pi-ai context.
  */
-export function toPiContext(options: GenerateOptions, attachments: AttachmentStore): Promise<PiContext>
-export function toPiContext(options: GenerateOptions, attachments?: AttachmentStore): PiContext | Promise<PiContext> {
-  return attachments === undefined ? textOnlyContext(options) : toPiContextWithImages(options, attachments)
+export function toPiContext(options: GenerateOptions, attachments: AttachmentStore | undefined, degradeImages?: boolean): Promise<PiContext>
+export function toPiContext(
+  options: GenerateOptions,
+  attachments?: AttachmentStore,
+  degradeImages?: boolean,
+): PiContext | Promise<PiContext> {
+  return attachments === undefined && !degradeImages ? textOnlyContext(options) : toPiContextWithImages(options, attachments, degradeImages)
 }
 
-async function toPiContextWithImages(options: GenerateOptions, attachments: AttachmentStore): Promise<PiContext> {
+async function toPiContextWithImages(
+  options: GenerateOptions,
+  attachments: AttachmentStore | undefined,
+  degradeImages = false,
+): Promise<PiContext> {
   const toolNames = new Map<CallId, string>()
   const messages: PiMessage[] = []
 
   for (const message of options.messages) {
     if (message.role === 'system') {
-      if (contentHasImage(message.content)) {
+      if (contentHasImage(message.content) && !degradeImages) {
         throw new LlmError('pi-ai cannot represent an image in an in-history system message', 'UNSUPPORTED_CONTENT')
       }
       // pi-ai has a single systemPrompt slot; in-history system messages are
@@ -165,13 +194,13 @@ async function toPiContextWithImages(options: GenerateOptions, attachments: Atta
     }
     // user role: text + tool results (each result becomes its own message).
     const regular = message.content.filter(block => block.type !== 'tool-result')
-    const content = await userContent(regular, attachments)
+    const content = await userContent(regular, attachments, degradeImages)
     const results = message.content.filter(block => block.type === 'tool-result')
     if (content.length > 0 || results.length === 0) {
       messages.push({ role: 'user', content, timestamp: 0 })
     }
     for (const result of results) {
-      const resultContent = await userContent(result.content, attachments)
+      const resultContent = await userContent(result.content, attachments, degradeImages)
       messages.push({
         role: 'toolResult',
         toolCallId: result.toolCallId,

@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-08-15T07:28:42.519Z",
+  "results": [
+    {
+      "name": "page + sparkle button ready",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "draft typed",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "loading state during enhance",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "no popover appears",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "enhanced text written straight into textarea",
+      "pass": true,
+      "detail": "len=231"
+    },
+    {
+      "name": "button becomes undo affordance",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "undo restores original draft",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "empty input surfaces error via button label (no popover)",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

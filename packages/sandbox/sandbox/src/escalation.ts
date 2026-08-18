@@ -41,6 +41,52 @@ export const WIDER_MODES: Record<string, readonly SandboxMode[]> = {
 export const ESCALATION_TARGETS: readonly SandboxMode[] = ['workspace-write', 'danger-full-access']
 
 /**
+ * Normalize a model-supplied escalation request against the call's effective
+ * mode BEFORE pairing validation or approval runs. An escalation is only
+ * meaningful when the requested mode is strictly wider than the call's
+ * effective mode; anything else — a mode equal to or narrower than the
+ * standing mode, which is exactly what a `danger-full-access` session produces
+ * when the model repeats a standing or lower target — is not an escalation at
+ * all, and degrades to NO request (both fields dropped, no approval prompt, no
+ * error). That keeps a redundant `sandbox_permissions` on a fully-permissive
+ * call from failing the call, matching the behavior of models that never send
+ * the field. With no effective mode (no confining backend) the request passes
+ * through untouched so the caller's own "not available" guard still fires.
+ * @param sandboxPermissions - the raw `sandbox_permissions` argument, if given.
+ * @param justification - the raw `justification` argument, if given.
+ * @param effectiveMode - the call's effective mode, or undefined when no
+ *   confining backend is mounted.
+ * @returns the request to validate and approve: the given fields when the
+ *   request is a genuine strictly-wider escalation (or undecidable for lack of
+ *   an effective mode), an empty object when it is not strictly wider.
+ */
+export function normalizeEscalationRequest(
+  sandboxPermissions: string | undefined,
+  justification: string | undefined,
+  effectiveMode: SandboxMode | undefined,
+): { sandbox_permissions?: string; justification?: string } {
+  const passthrough = (): { sandbox_permissions?: string; justification?: string } => ({
+    ...(sandboxPermissions !== undefined ? { sandbox_permissions: sandboxPermissions } : {}),
+    ...(justification !== undefined ? { justification } : {}),
+  })
+  if (effectiveMode === undefined || sandboxPermissions === undefined) {
+    return passthrough()
+  }
+  // An unrecognized effective mode is a defensive edge — pass the request
+  // through untouched so the fail-closed sequence still rules on it.
+  if (effectiveMode !== 'read-only' && effectiveMode !== 'workspace-write' && effectiveMode !== 'danger-full-access') {
+    return passthrough()
+  }
+  if (!(WIDER_MODES[effectiveMode] ?? []).includes(sandboxPermissions as SandboxMode)) {
+    return {}
+  }
+  return {
+    sandbox_permissions: sandboxPermissions,
+    ...(justification !== undefined ? { justification } : {}),
+  }
+}
+
+/**
  * Validate the escalation argument pairing a tool schema cannot express:
  * `sandbox_permissions` and `justification` travel together — an approval
  * prompt without a reason, or a reason driving nothing, is a malformed ask —

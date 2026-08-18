@@ -1,0 +1,55 @@
+﻿{
+    "type":  "server-response",
+    "rpcId":  "verify-noclarify-1",
+    "result":  {
+                   "ok":  true,
+                   "value":  {
+                                 "enhancedText":  "请以资深市场营销专家的身份，帮我为【产品名称/类型】制定一份可执行的推广方案。方案请按以下结构展开：1）市场与竞品分析；2）目标受众画像；3）推广渠道与组合策略；4）预算分配（用表格展示）；5）分阶段执行计划及时间节点；6）效果评估指标。如缺少产品信息、受众、预算或时间周期等关键数据，请在相应位置用【】占位，并在文末列出需要我补充的问题清单。最终使用 Markdown 格式输出，并附一页方案摘要。",
+                                 "analysis":  {
+                                                  "detectedTaskType":  "business",
+                                                  "confidence":  0.9,
+                                                  "scoreDimensions":  {
+                                                                          "objective":  50,
+                                                                          "context":  10,
+                                                                          "audience":  0,
+                                                                          "outputFormat":  0,
+                                                                          "constraints":  0,
+                                                                          "role":  0,
+                                                                          "materials":  0,
+                                                                          "actionability":  20
+                                                                      },
+                                                  "totalScore":  14,
+                                                  "scoreSource":  "llm",
+                                                  "missingInformation":  [
+                                                                             "产品名称及核心卖点",
+                                                                             "目标受众画像",
+                                                                             "推广预算范围",
+                                                                             "推广时间周期",
+                                                                             "期望达成的效果指标"
+                                                                         ],
+                                                  "criticalMissingInformation":  [
+                                                                                     "产品具体信息与卖点",
+                                                                                     "目标受众画像",
+                                                                                     "预算与时间周期"
+                                                                                 ],
+                                                  "suggestions":  [
+                                                                      "补充产品名称、定位和核心卖点，便于定制方案",
+                                                                      "明确目标受众与期望的转化目标",
+                                                                      "提供预算范围和推广时间周期，便于制定排期"
+                                                                  ],
+                                                  "clarificationRequired":  false,
+                                                  "clarificationQuestions":  [
+
+                                                                             ]
+                                              },
+                                 "assumptions":  [
+                                                     "假设用户希望方案涵盖从市场分析到执行评估的完整流程",
+                                                     "假设用户目前未提供具体产品数据，需通过占位符引导补充",
+                                                     "假设用户接受 Markdown 结构化输出格式"
+                                                 ],
+                                 "provider":  "packy",
+                                 "model":  "deepseek-v4-flash",
+                                 "fallback":  null
+                             }
+               }
+}

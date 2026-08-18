@@ -135,6 +135,96 @@ describe('ModelSelect reasoning effort', () => {
     expect(screen.getByRole('menuitemradio', { name: 'DeepSeek-V4-Flash' })).toBeTruthy()
   })
 
+  it('reveals the effort list as a hover flyout without drilling, and a mouse click on the row does not drill', () => {
+    const directory = createSnapshotStore(state())
+    render(<ModelSelect
+      locked={false}
+      available
+      directory={directory}
+      load={vi.fn()}
+      select={vi.fn().mockResolvedValue(true)}
+      t={t}
+    />)
+
+    const trigger = screen.getByRole('button', {
+      name: '选择模型，当前 DeepSeek-V4-Flash，推理等级 High',
+    })
+    fireEvent.click(trigger)
+    const effortRow = screen.getByRole('menuitem', { name: /推理等级/ })
+    const modelRow = screen.getByRole('menuitem', { name: /^模型/ })
+
+    // Hovering the row reveals the list as a flyout (two menus: the root + flyout).
+    fireEvent.mouseEnter(effortRow)
+    expect(screen.getAllByRole('menu').length).toBe(2)
+    expect(screen.getAllByRole('menuitemradio').map(item => item.textContent))
+      .toEqual(['Off', 'High', 'MaxLargest budget'])
+
+    // Hovering the other row swaps the flyout content, root menu stays open.
+    fireEvent.mouseEnter(modelRow)
+    expect(screen.getAllByRole('menu').length).toBe(2)
+    expect(screen.getAllByRole('menuitemradio').map(item => item.textContent))
+      .toEqual(['DeepSeek-V4-Flash'])
+    expect(screen.getByRole('menuitem', { name: /推理等级/ })).toBeTruthy()
+
+    // A MOUSE click (detail >= 1) on the row does NOT drill into a pane.
+    fireEvent.click(effortRow, { detail: 1 })
+    expect(screen.queryByRole('menuitemradio', { name: /Max/ })).toBeNull()
+    expect(screen.getByRole('menuitem', { name: /推理等级/ })).toBeTruthy()
+
+    // Re-hover the effort row: the effort list is the flyout again.
+    fireEvent.mouseEnter(effortRow)
+    expect(screen.getAllByRole('menuitemradio').map(item => item.textContent))
+      .toEqual(['Off', 'High', 'MaxLargest budget'])
+  })
+
+  it('keeps the flyout when the pointer leaves the row toward it (no row-level retraction)', () => {
+    const directory = createSnapshotStore(state())
+    render(<ModelSelect
+      locked={false}
+      available
+      directory={directory}
+      load={vi.fn()}
+      select={vi.fn().mockResolvedValue(true)}
+      t={t}
+    />)
+
+    fireEvent.click(screen.getByRole('button', {
+      name: '选择模型，当前 DeepSeek-V4-Flash，推理等级 High',
+    }))
+    const effortRow = screen.getByRole('menuitem', { name: /推理等级/ })
+    fireEvent.mouseEnter(effortRow)
+    expect(screen.getAllByRole('menuitemradio').length).toBe(3)
+
+    // Leaving the row toward anything outside the seat must NOT retract the
+    // flyout — the pointer is on its way to the flyout itself.
+    fireEvent.mouseLeave(effortRow, { relatedTarget: document.body })
+    expect(screen.getAllByRole('menuitemradio').length).toBe(3)
+
+    // Hovering the other row still switches the flyout content.
+    fireEvent.mouseEnter(screen.getByRole('menuitem', { name: /^模型/ }))
+    expect(screen.getAllByRole('menuitemradio').map(item => item.textContent)).toEqual(['DeepSeek-V4-Flash'])
+  })
+
+  it('drills into the pane on keyboard activation of the row (accessible path)', () => {
+    const directory = createSnapshotStore(state())
+    render(<ModelSelect
+      locked={false}
+      available
+      directory={directory}
+      load={vi.fn()}
+      select={vi.fn().mockResolvedValue(true)}
+      t={t}
+    />)
+
+    fireEvent.click(screen.getByRole('button', {
+      name: '选择模型，当前 DeepSeek-V4-Flash，推理等级 High',
+    }))
+    // Keyboard activation synthesizes a click with detail 0.
+    fireEvent.click(screen.getByRole('menuitem', { name: /推理等级/ }), { detail: 0 })
+    expect(screen.getAllByRole('menuitemradio').map(item => item.textContent))
+      .toEqual(['Off', 'High', 'MaxLargest budget'])
+  })
+
   it('announces a rejected selection as a transient toast and keeps the in-menu strip for loads', async () => {
     const groups = [{
       id: 'deepseek-official',

@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-08-15T12:21:27.366Z",
+  "results": [
+    {
+      "name": "page + button ready",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "first enhance writes to textarea",
+      "pass": true,
+      "detail": "len=21"
+    },
+    {
+      "name": "repeat enhance hits cache (fast)",
+      "pass": true,
+      "detail": "38ms"
+    }
+  ]
+}

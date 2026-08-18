@@ -250,6 +250,17 @@
     - id: ui-model-selection
       name: '@deepseek-ai/dsh-client-ui-model-selection'
 
+    # Prompt Boost: the enhance button beside the send button, over the
+    # promptEnhancer Remote (drafts rewritten into stronger prompts in-place).
+    - id: ui-prompt-boost
+      name: '@deepseek-ai/dsh-client-ui-prompt-boost'
+
+    # ask_gpt: the animated toggle beside the send button that switches the web
+    # ChatGPT consultation tool (named-conversation or proactive auto mode),
+    # writing the host-owned `gpt-web` settings namespace.
+    - id: ui-ask-gpt
+      name: '@deepseek-ai/dsh-client-ui-ask-gpt'
+
     - id: ui-permission
       name: '@deepseek-ai/dsh-client-ui-permission-presets'
 
